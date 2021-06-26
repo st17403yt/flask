@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <title>TODOアプリ</title>
+</head>
+
+<body>
+    <main>
+        <div id="title" class="title">タスク</div>
+        <form name="f" method="post" action="/update">
+            <div class="text_area">
+                <input type="text" name="title" placeholder="title" value="{{task.title}}">
+                <input type="text" name="memo" placeholder="memo" value="{{task.memo}}">
+                <input type="text" name="date" placeholder="date" value="{{task.date}}">
+                <input type="text" name="place" placeholder="place" value="{{task.place}}">
+            </div>
+            <input type="hidden" name="taskid" value="{{task.taskid}}">
+            <button>更新</button>
+        </form>
+    </main>
+</body>

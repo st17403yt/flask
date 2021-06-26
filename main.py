@@ -1,5 +1,3 @@
-# https://myafu-python.com/todo/
-
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -43,12 +41,21 @@ def new():
     return redirect(url_for('index'))
 
 
+@app.route('/edit', methods=["POST"])
+def edit():
+    taskid = request.form["taskid"]
+    task = Task.query.filter_by(taskid=taskid).first()
+    return render_template("edit.html", task=task)
+
+
 @app.route('/update', methods=["POST"])
 def update():
-    id = request.form["id"]
-    text = request.form["text"]
-    task = Task.query.filter_by(id=id).first()
-    task.text = text
+    taskid = request.form["taskid"]
+    task = Task.query.filter_by(taskid=taskid).first()
+    task.title = request.form["title"]
+    task.memo = request.form["memo"]
+    task.date = request.form["date"]
+    task.place = request.form["place"]
     db.session.commit()
     return redirect(url_for('index'))
 
@@ -62,4 +69,5 @@ def delete():
     return redirect(url_for('index'))
 
 
-app.run(debug=True, host=os.getenv('APP_ADDRESS', 'localhost'), port=8001)
+if __name__ == "__main__":
+    app.run(debug=True, host=os.getenv('APP_ADDRESS', 'localhost'), port=8001)
