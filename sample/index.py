@@ -1,5 +1,5 @@
-from sqlite3.dbapi2 import Date
 from flask import Flask, request, Markup, abort
+import database
 
 app = Flask(__name__)
 
@@ -50,6 +50,7 @@ def test():
             date = request.args.get('date', '')
             place = request.args.get('place', '')
             taskid = taskid
+            database.create(userid, title, memo, date, place, taskid)
             html = f"""
             <p>userid: {userid}</p>
             <p>title: {title}</p>
@@ -59,8 +60,16 @@ def test():
             <p>taskid: {taskid}</p> 
             """
             return Markup(html)
+
         elif request.method == 'POST':
-            return request.form['userid']
+            userid = request.form['userid']
+            title = request.form['title']
+            html = f"""
+            <p>userid: {userid}</p>
+            <p>title: {title}</p>
+            """
+            return Markup(html)
+
         else:
             return abort(400)
     except Exception as e:
@@ -69,3 +78,4 @@ def test():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    database.create_table()
