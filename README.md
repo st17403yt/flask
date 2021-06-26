@@ -9,7 +9,6 @@ pip install Flask-SQLAlchemy
 
 サーバの起動
 python main.py
-localhost 8001
 
 実行確認済み環境
 python 3.9.5
