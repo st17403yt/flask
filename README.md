@@ -7,7 +7,7 @@ googleでログインしてタスクの追加、編集、削除ができるだ�
 pip install Flask
 pip install Flask-SQLAlchemy
 pip install hashlib
-pip install jwt
+pip install PyJWT
 
 サーバの起動
 python main.py
