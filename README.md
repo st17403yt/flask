@@ -2,6 +2,7 @@
 flask todo application
 
 googleでログインしてタスクの追加、編集、削除ができるだけ
+client_id, client_secretはGoogle Cloud Platformにて作製してください
 
 ライブラリのインストール
 pip install Flask
