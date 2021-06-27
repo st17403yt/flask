@@ -8,10 +8,9 @@
 
 <body>
     <main>
-        <div id="title" class="title">タスク</div>
+        <div id="title" class="title">{{name}}のタスク</div>
         <form name="f" method="post" action="/create">
             <div class="text_area">
-                <input type="text" name="userid" placeholder="userid">
                 <input type="text" name="title" placeholder="title">
                 <input type="text" name="memo" placeholder="memo">
                 <input type="text" name="date" placeholder="date">
@@ -19,6 +18,11 @@
             </div>
             <button type="submit" formmethod="POST">POST</button>
         </form>
+        <form name="f" method="post" action="/login">
+            <button type="submit" formmethod="POST">login</button>
+        </form>
+        <br><br>
+        <p>タスク一覧</p>
         <table border="1" style="border-collapse: collapse;" cellpadding="5">
             <tr>
                 <td>userid</td>
@@ -30,13 +34,13 @@
             </tr>
             {% for task in tasks %}
             <tr>
-                <td id="task_{{task.taskid}}" task_id="{{task.taskid}}">{{ task.userid }}</td>
-                <td id="task_{{task.taskid}}" task_id="{{task.taskid}}">{{ task.title }}</td>
-                <td id="task_{{task.taskid}}" task_id="{{task.taskid}}">{{ task.memo }}</td>
-                <td id="task_{{task.taskid}}" task_id="{{task.taskid}}">{{ task.date }}</td>
-                <td id="task_{{task.taskid}}" task_id="{{task.taskid}}">{{ task.place }}</td>
-                <td id="task_{{task.taskid}}" task_id="{{task.taskid}}">{{ task.taskid }}</td>
-                <td id="task_{{task.taskid}}" task_id="{{task.taskid}}">
+                <td>{{ task.userid }}</td>
+                <td>{{ task.title }}</td>
+                <td>{{ task.memo }}</td>
+                <td>{{ task.date }}</td>
+                <td>{{ task.place }}</td>
+                <td>{{ task.taskid }}</td>
+                <td>
                     <form method="POST" action="/edit">
                         <input type="hidden" name="taskid" value="{{task.taskid}}">
                         <button>編集</button>
@@ -48,6 +52,22 @@
                         <button>削除</button>
                     </form>
                 </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br><br>
+        <p>ユーザ一覧</p>
+        <table border="1" style="border-collapse: collapse;" cellpadding="5">     <br><br>
+            <tr>
+                <td>userid</td>
+                <td>name</td>
+                <td>email</td>
+            </tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.userid }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
             </tr>
             {% endfor %}
         </table>

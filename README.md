@@ -1,11 +1,13 @@
 # flask
 flask todo application
 
-タスクの追加、編集、削除ができるだけ
+googleでログインしてタスクの追加、編集、削除ができるだけ
 
 ライブラリのインストール
 pip install Flask
 pip install Flask-SQLAlchemy
+pip install hashlib
+pip install jwt
 
 サーバの起動
 python main.py
