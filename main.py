@@ -41,10 +41,13 @@ class User(db.Model):
     username = db.Column(db.String(100))
     email = db.Column(db.String(200))
 
+
 # データベースの生成
 db.create_all()
 
 # localhostにアクセスしたときの処理
+
+
 @app.route('/')
 def index():
     # templatesのindex.htmlでタスクを全て表示
@@ -55,6 +58,8 @@ def index():
     return render_template("login.html")
 
 # localhost/createにpostされた時の処理
+
+
 @app.route('/create', methods=["POST"])
 def new():
     # 入力されたデータでタスクを追加してindexにリダイレクト
@@ -69,6 +74,8 @@ def new():
     return redirect(url_for('index'))
 
 # 編集ボタンが押された時の処理
+
+
 @app.route('/edit', methods=["POST"])
 def edit():
     # 選択されたタスクの編集画面へ遷移
@@ -77,6 +84,8 @@ def edit():
     return render_template("edit.html", task=task)
 
 # 編集画面からpostされた時の処理
+
+
 @app.route('/update', methods=["POST"])
 def update():
     # 編集後のデータを設定してindexにリダイレクト
@@ -90,6 +99,8 @@ def update():
     return redirect(url_for('index'))
 
 # localhostにアクセスしたとき
+
+
 @app.route('/delete', methods=["POST"])
 def delete():
     # 選択されたタスクを削除してindexにリダイレクト
@@ -188,13 +199,19 @@ def callback():
     # claimsのsubは全てのGoogleアカウントで一意
     session["userid"] = claims["sub"]
     session["name"] = claims["name"]
-    user = User()
-    user.email = claims["email"]
-    user.userid = claims["sub"]
-    user.username = claims["name"]
-    db.session.add(user)
-    db.session.commit()
+
+    tasks = Task.query.filter_by(userid=session["userid"])
+    not_exists = db.session.query(User).filter_by(
+        userid=session["userid"]).scalar() is None
+    if not_exists:
+        user = User()
+        user.email = claims["email"]
+        user.userid = claims["sub"]
+        user.username = claims["name"]
+        db.session.add(user)
+        db.session.commit()
     return redirect(url_for("index"))
+
 
 if __name__ == "__main__":
     # サーバの設定 address:localhost port:5000
