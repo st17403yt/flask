@@ -52,9 +52,12 @@ db.create_all()
 def index():
     # templatesのindex.htmlでタスクを全て表示
     if "userid" in session:
-        tasks = Task.query.filter_by(userid=session["userid"])
-        users = User.query.all()
-        return render_template("index.html", tasks=tasks, name=session["name"], users=users)
+        exists = db.session.query(User).filter_by(
+            userid=session["userid"]).scalar() is not None
+        if exists:
+            tasks = Task.query.filter_by(userid=session["userid"])
+            users = User.query.all()
+            return render_template("index.html", tasks=tasks, name=session["name"], users=users)
     return render_template("login.html")
 
 # localhost/createにpostされた時の処理
@@ -64,7 +67,7 @@ def index():
 def new():
     # 入力されたデータでタスクを追加してindexにリダイレクト
     task = Task()
-    task.userid = request.form["userid"]
+    task.userid = session["userid"]
     task.title = request.form["title"]
     task.memo = request.form["memo"]
     task.date = request.form["date"]
