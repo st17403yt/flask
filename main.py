@@ -70,7 +70,9 @@ def new():
     task.userid = session["userid"]
     task.title = request.form["title"]
     task.memo = request.form["memo"]
-    task.date = request.form["date"]
+    date = request.form["date"].replace("-", "/")
+    time = request.form["time"].replace(":", "/")
+    task.date = date + "/" + time
     task.place = request.form["place"]
     db.session.add(task)
     db.session.commit()
@@ -82,9 +84,13 @@ def new():
 @app.route('/edit', methods=["POST"])
 def edit():
     # 選択されたタスクの編集画面へ遷移
-    taskid = request.form["taskid"]
-    task = Task.query.filter_by(taskid=taskid).first()
-    return render_template("edit.html", task=task)
+    #taskid = request.form["taskid"]
+    session["taskid"] = request.form["taskid"]
+    task = Task.query.filter_by(taskid=session["taskid"]).first()
+    temp = task.date.split("/")
+    date = temp[0] + "-" + temp[1] + "-" + temp[2]
+    time = temp[3] + ":" + temp[4]
+    return render_template("edit.html", task=task, date=date, time=time)
 
 # 編集画面からpostされた時の処理
 
@@ -96,7 +102,9 @@ def update():
     task = Task.query.filter_by(taskid=taskid).first()
     task.title = request.form["title"]
     task.memo = request.form["memo"]
-    task.date = request.form["date"]
+    date = request.form["date"].replace("-", "/")
+    time = request.form["time"].replace(":", "/")
+    task.date = date + "/" + time
     task.place = request.form["place"]
     db.session.commit()
     return redirect(url_for('index'))
@@ -121,8 +129,10 @@ def delete():
 # クライアント情報
 # 自身の環境に合わせて設定する。
 # google cloud platform にて発行可能
-client_id = '<client_id>.apps.googleusercontent.com'
-client_secret = '<client_secret>'
+client_id = "950176723979-m6eoj3ska34v6dpaj5uh0em5uaeooumv.apps.googleusercontent.com"
+# client_id = '<client_id>.apps.googleusercontent.com'
+client_secret = 'CJSl_zrZZxgjpfOVHupCS8oy'
+# client_secret = '<client_secret>'
 redirect_uri = 'http://localhost:5000/callback'
 
 # id_token 検証用公開鍵

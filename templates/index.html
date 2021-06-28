@@ -11,10 +11,11 @@
         <div id="title" class="title">{{name}}のタスク</div>
         <form name="f" method="post" action="/create">
             <div class="text_area">
-                <input type="text" name="title" placeholder="title" required>
-                <input type="text" name="memo" placeholder="memo">
-                <input type="text" name="date" placeholder="date" required>
-                <input type="text" name="place" placeholder="place">
+                <p>title :<input type="text" name="title" placeholder="title" required></p>
+                <p>memo :<input type="text" name="memo" placeholder="memo"></p>
+                <p>date :<input type="date" name="date" placeholder="date" required></p>
+                <p>time :<input type="time" name="time" placeholder="time" required></p>
+                <p>place :<input type="text" name="place" placeholder="place"></p>
             </div>
             <button type="submit" formmethod="POST">POST</button>
         </form>
