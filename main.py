@@ -129,10 +129,8 @@ def delete():
 # クライアント情報
 # 自身の環境に合わせて設定する。
 # google cloud platform にて発行可能
-client_id = "950176723979-m6eoj3ska34v6dpaj5uh0em5uaeooumv.apps.googleusercontent.com"
-# client_id = '<client_id>.apps.googleusercontent.com'
-client_secret = 'CJSl_zrZZxgjpfOVHupCS8oy'
-# client_secret = '<client_secret>'
+client_id = '<client_id>.apps.googleusercontent.com'
+client_secret = '<client_secret>'
 redirect_uri = 'http://localhost:5000/callback'
 
 # id_token 検証用公開鍵
