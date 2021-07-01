@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
 import urllib.request
@@ -9,6 +9,8 @@ import urllib.request
 import urllib.parse
 import jwt
 from jwt.algorithms import RSAAlgorithm
+import re
+import string
 
 app = Flask(__name__)
 
@@ -45,9 +47,8 @@ class User(db.Model):
 # データベースの生成
 db.create_all()
 
+
 # localhostにアクセスしたときの処理
-
-
 @app.route('/')
 def index():
     # templatesのindex.htmlでタスクを全て表示
@@ -60,9 +61,8 @@ def index():
             return render_template("index.html", tasks=tasks, name=session["name"], users=users)
     return render_template("login.html")
 
+
 # localhost/createにpostされた時の処理
-
-
 @app.route('/create', methods=["POST"])
 def new():
     # 入力されたデータでタスクを追加してindexにリダイレクト
@@ -78,9 +78,8 @@ def new():
     db.session.commit()
     return redirect(url_for('index'))
 
+
 # 編集ボタンが押された時の処理
-
-
 @app.route('/edit', methods=["POST"])
 def edit():
     # 選択されたタスクの編集画面へ遷移
@@ -92,9 +91,8 @@ def edit():
     time = temp[3] + ":" + temp[4]
     return render_template("edit.html", task=task, date=date, time=time)
 
+
 # 編集画面からpostされた時の処理
-
-
 @app.route('/update', methods=["POST"])
 def update():
     # 編集後のデータを設定してindexにリダイレクト
@@ -109,9 +107,8 @@ def update():
     db.session.commit()
     return redirect(url_for('index'))
 
+
 # localhostにアクセスしたとき
-
-
 @app.route('/delete', methods=["POST"])
 def delete():
     # 選択されたタスクを削除してindexにリダイレクト
@@ -120,6 +117,49 @@ def delete():
     db.session.delete(task)
     db.session.commit()
     return redirect(url_for('index'))
+
+
+# 住所入力時の補完機能
+@app.route('/autocomplete', methods=['POST'])
+def autocomplete():
+    if request.method == 'POST':
+        data = request.get_data()
+        input = escape(data.decode())
+        ans = []
+        pat = "^.*" + input + ".*$"
+        count = 0
+        ans, count = search(ans, pat, "./data/prefecture.txt", count)
+        ans, count = search(ans, pat, "./data/city.txt", count)
+        ans, count = search(ans, pat, "./data/town.txt", count)
+        ans, count = search(ans, pat, "./data/block.txt", count)
+        d = {}
+        for i in range(count):
+            d["value" + str(i)] = ans[i]
+        return jsonify(d)
+
+
+def search(ans, pat, file, count):
+    f = open(file, "r", encoding="utf-8")
+    a = f.read()
+    data = a.splitlines()
+    for i in data:
+        if count > 5:
+            break
+        res = re.fullmatch(pat, i)
+        if res != None:
+            print(res.group(0))
+            ans.append(res.group(0))
+            count = count + 1
+    f.close()
+    return ans, count
+
+
+def escape(text):
+    symbol = string.punctuation
+    table = str.maketrans("", "", symbol)
+    result = text.translate(table)
+    return result
+
 
 ###########################################
 # ここからユーザ認証
@@ -137,12 +177,12 @@ redirect_uri = 'http://localhost:5000/callback'
 # https://www.googleapis.com/oauth2/v3/certs
 # 下のやつを使ったら行けた
 jwk_json = {
-    "alg": "RS256",
-    "n": "rH9e4LpeORtRkQuo5vKL-csLPnJmyWU_qHiOqWyXVsoPymUKImNsPlabOcvkYYlPflWE-qmtQCH-ACDjxzChyIktr-5zeCEZidln8pWEmDq-R-aXi_sQgJUr-7H_Y69hD8cR0K3LyC86QRbpigxW8F6hUU9aj_9VWuVwsMvLiQnbbzS4CWvi_WzIW9iG0gOthsslffa_6rqoQpHc0GfsEu3e971QZcJyMxr6ptY_bvTwIYqwRv9ptxtKTMqovV6YBN5n_LhCDmk1gBLmSej6mfHSW2io6TXZaV3PayL2UTte6qrvAkF_RXUtVeuDxm4scUe1Rdf-TdsAXFm1KPNq4w",
-    "kid": "112e4b52ab833017d385ce0d0b4c60587ed25842",
     "e": "AQAB",
     "kty": "RSA",
-    "use": "sig"
+    "use": "sig",
+    "alg": "RS256",
+    "kid": "b6f8d55da534ea91cb2cb00e1af4e8e0cdeca93d",
+    "n": "3aOynmXd2aSH0ZOd0TIYd5RRaNXhLW306dlYw26nMp6QPGaJuOeMhTO3BO8Zt_ncRs4gdry4mEaUOetCKTUOyCCpIM2JAn0laN_iHfGKTYsNkjr16FiHWYJmvNJ1Q1-XXjWqNNKMFIKHKtMrsP2XPVD6ufp-lNQmt4Dl0g0qXJ4_Y_CKuP-uSlFWZuJ_0_2ukUgevvKtOZNcbth0iOiFalBRDr-2i1eNSJWOknEphy7GRs-JGPboTdHC7A3b-0dVFGMEMJFhxcEJHJgLCsQGdYdkphLJ5f21gCNdhp3g16H3Cqts2KTXgO4Rr8uhwZx5yiUjTuizD9wc7uDso4UJ7Q"
 }
 public_key = RSAAlgorithm.from_jwk(jwk_json)
 
