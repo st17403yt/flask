@@ -43,8 +43,10 @@ class Task(db.Model):
 
 
 class User(db.Model):
+    # テーブルの設定
     __tablename__ = "users"
-    # userid = sub
+
+    # カラムの設定
     userid = db.Column(db.String(100), primary_key=True)
     username = db.Column(db.String(100))
     email = db.Column(db.String(200))
@@ -57,7 +59,7 @@ db.create_all()
 # localhostにアクセスしたときの処理
 @app.route('/')
 def index():
-    # templatesのindex.htmlでタスクを全て表示
+    # templatesのindex.htmlで自分のタスクを全て表示
     if "userid" in session:
         exists = db.session.query(User).filter_by(
             userid=session["userid"]).scalar() is not None
@@ -90,7 +92,6 @@ def new():
 @app.route('/edit', methods=["POST"])
 def edit():
     # 選択されたタスクの編集画面へ遷移
-    #taskid = request.form["taskid"]
     session["taskid"] = request.form["taskid"]
     task = Task.query.filter_by(taskid=session["taskid"]).first()
     temp = task.date.split("/")
@@ -146,7 +147,7 @@ def autocomplete():
             d["value" + str(i)] = ans[i]
         return jsonify(d)
 
-
+# 与えられたファイル名のファイルから与えられた正規表現にマッチするものを抽出
 def search(ans, pat, file, count):
     f = open(file, "r", encoding="utf-8")
     a = f.read()
@@ -156,54 +157,62 @@ def search(ans, pat, file, count):
             break
         res = re.fullmatch(pat, i)
         if res != None:
-            print(res.group(0))
             ans.append(res.group(0))
             count = count + 1
     f.close()
     return ans, count
 
-
+# 入力の中から記号を削除
 def escape(text):
     symbol = string.punctuation
     table = str.maketrans("", "", symbol)
     result = text.translate(table)
     return result
 
-
+# 各ユーザの直近のタスクを更新
 def task_update():
-    tasks = Task.query.order_by(asc(Task.date)).all()
-    users_tasks = db.session.query(Task).filter_by(
-        userid=session["userid"]).scalar() is None
-    f = True
-    print()
-    if users_tasks:
-        f = False
+    tasks = Task.query.order_by(asc(Task.date)).all()  # 全てのタスクを日付順で取得
     for task in tasks:
         if task.userid == session["userid"]:
-            user = User.query.filter_by(userid=session["userid"]).first()
+            # 登録されているタスクの中に現在ログインしているユーザのタスクがある
             for i in top_task_list:
                 if i.user_id == session["userid"]:
-                    if f:
-                        i.task_name = task.title
-                        task_ts = task.date.split('/')
-                        i.task_time = datetime.datetime.fromisoformat(
-                            task_ts[0]+'-'+task_ts[1]+'-'+task_ts[2]+'T'+task_ts[3]+':'+task_ts[4]+':00')
-                        i.memo = task.memo
-                        i.destination = task.place
-                        i.task_id = task.taskid
-                        for i in top_task_list:
-                            print(i.task_name)
-                        return
-                    else:
-                        top_task_list.os.remove(i)
-                        print("heelo")
-                        return
+                    # top_task_list の中に現在ログインしているユーザのタスクがある
+                    # -> top_task_list の更新
+                    i.task_name = task.title
+                    task_ts = task.date.split('/')
+                    i.task_time = datetime.datetime.fromisoformat(
+                        task_ts[0]+'-'+task_ts[1]+'-'+task_ts[2]+'T'+task_ts[3]+':'+task_ts[4]+':00')
+                    i.memo = task.memo
+                    i.destination = task.place
+                    i.task_id = task.taskid
+                    print_top_task("edit")
+                    return
+
+            # top_task_list の中に現在ログインしているユーザのタスクがない
+            # -> top_task_list への登録
+            user = User.query.filter_by(userid=session["userid"]).first()
             t = top_task(user.email, task.title, task.date,
                          task.memo, task.place, task.taskid, user.userid)
             top_task_list.append(t)
-    print("h")
+            print_top_task("append")
+            return
+
+    # 登録されているタスクの中に現在ログインしているユーザのタスクがない
     for i in top_task_list:
-        print(i)
+        if i.user_id == session["userid"]:
+            # top_task_list の中に現在ログインしているユーザのタスクがある
+            # -> top_task_list からの削除
+            top_task_list.remove(i)
+            print_top_task("remove")
+            return
+
+
+# デバッグ用関数
+def print_top_task(text):
+    print("top_task_list : " + text)
+    for i in top_task_list:
+        print(i.mail + " " + i.task_name)
 
 
 ###########################################
@@ -211,7 +220,6 @@ def task_update():
 ###########################################
 # クライアント情報
 # 自身の環境に合わせて設定する。
-# google cloud platform にて発行可能
 client_id = "<client_id>"
 client_secret = "<client_secret>"
 redirect_uri = 'http://localhost:5000/callback'
@@ -257,6 +265,7 @@ def login():
 
 
 # 認可レスポンス用リダイレクションエンドポイント + トークンリクエスト用
+# コールバックアドレス
 @app.route("/callback")
 def callback():
     # state 検証
@@ -294,7 +303,6 @@ def callback():
     session["userid"] = claims["sub"]
     session["name"] = claims["name"]
 
-    tasks = Task.query.filter_by(userid=session["userid"])
     not_exists = db.session.query(User).filter_by(
         userid=session["userid"]).scalar() is None
     if not_exists:
@@ -306,6 +314,9 @@ def callback():
         db.session.commit()
     return redirect(url_for("index"))
 
+
+############################################################################################################
+# ここからメール送信系の処理
 ############################################################################################################
 
 
@@ -331,7 +342,7 @@ class top_task:
 
 
 top_task_list = [
-    #   top_task("nitic5ijikken@gmail.com", "ahgfb", "2021/07/01/14/45",
+    # top_task("nitic5ijikken@gmail.com", "ahgfb", "2021/07/01/14/45",
     #           "akndneboiaenoiadf", None, 12, "userid"),
     # top_task("nitic5ijikken@gmail.com", "qwerty", "2021/07/01/14/45",
     #         "sdkfghosevseuvibvbareaer", "バーガーキングニューポートひたちなか店", 11, "userid")
@@ -355,7 +366,7 @@ def send_mail(task):
     from_email = 'nitic5ijikken@gmail.com'
     to_email = task.mail
     username = 'nitic5ijikken@gmail.com'
-    password = "<password>"
+    password = '<password>'
 
     msg = message.EmailMessage()
     msg.set_content('件名:' + task.task_name + 'が' + str(task.task_time) +
@@ -380,7 +391,7 @@ def send_mail_reminder(task):
     from_email = 'nitic5ijikken@gmail.com'
     to_email = task.mail
     username = 'nitic5ijikken@gmail.com'
-    password = "<password>"
+    password = '<password>'
 
     msg = message.EmailMessage()
     msg.set_content('リマインドメールです.\n\n件名:' + task.task_name + 'が' + str(task.task_time) +
@@ -401,9 +412,12 @@ def send_mail_reminder(task):
 alarm_list = []
 
 
+# 起動時の処理
 if __name__ == "__main__":
     # サーバの設定 address:localhost port:5000
     app.run(debug=True, host=os.getenv('APP_ADDRESS', 'localhost'), port=5000)
+
+    # メール系の処理
     # check()
     print("start")
     while True:
