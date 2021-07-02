@@ -1,0 +1,97 @@
+/*色設定*/
+:root{
+  --color-white:White;
+  --color-lgray:LightGray;
+  --color-gray:Gray;
+  --color-black:Black;
+  --color-lcyan:LightCyan;
+  --color-dblue:DodgerBlue;
+  --color-sblue:SteelBlue;
+  --color-lblue:LightBlue;
+}
+
+body{
+  text-align:center;　/*横中央揃え*/
+  background: var(--color-lcyan);
+}
+
+/*ボタンデザイン*/
+.button-l {
+  display: inline-block;
+  padding: 0.5em 1em;
+  text-decoration: none;
+  background: var(--color-white);/*ボタン色*/
+  color: var(--color-dblue);
+  border-bottom: solid 4px var(--color-sblue);
+  border-radius: 3px;
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 10px 0px;
+}
+
+.button-l:active {  /*ボタンを押したとき*/
+  -webkit-transform: translateY(4px);
+  transform: translateY(4px);/*下に動く*/
+  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.2);/*影を小さく*/
+  border-bottom: none;
+  font-size: 24px;
+  line-height: 1.2;
+  margin: 10px 0px;
+}
+
+.button-s {
+  display: inline-block;
+  padding: 0.2em 0.5em;
+  text-decoration: none;
+  background: var(--color-white);/*ボタン色*/
+  color: var(--color-dblue);
+  border-bottom: solid 4px var(--color-sblue);
+  border-radius: 3px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.button-s:active {  /*ボタンを押したとき*/
+  -webkit-transform: translateY(4px);
+  transform: translateY(4px);/*下に動く*/
+  box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.2);/*影を小さく*/
+  border-bottom: none;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+/*textデザイン関係*/
+.message-l{
+  font-size: 32px;
+  line-height: 1.2;
+  background: var(--color-lblue)
+}
+
+.title{
+  font-size: 32px;
+  background: var(--color-lblue)
+}
+
+.text_area{
+  font-size: 32px;
+}
+
+.tbox{
+  font-size: 32px;
+  width: 300px;
+}
+
+/*tableデザイン*/
+table {
+    margin-left: auto;
+    margin-right: auto;
+    border: 3px solid var(--color-sblue);
+}
+
+td{
+  font-size: 28px;
+}
+
+.tr1{
+  background: var(--color-lblue);
+}

@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <title>TODOアプリ</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css')}}" />
 </head>
 
 <body>
@@ -11,14 +12,15 @@
         <div id="title" class="title">タスク</div>
         <form name="f" method="post" action="/update">
             <div class="text_area">
-                <p>title :<input type="text" name="title" placeholder="title" value="{{task.title}}" required></p>
-                <p>memo :<input type="text" name="memo" placeholder="memo" value="{{task.memo}}"></p>
-                <p>date :<input type="date" name="date" placeholder="date" value="{{date}}" required></p>
-                <p>time :<input type="time" name="time" placeholder="time" value="{{time}}" required></p>
-                <p>place :<input type="text" name="place" placeholder="place" value="{{task.place}}"></p>
+                <p>title :<input type="text" name="title" placeholder="title" value="{{task.title}}" required
+                        class="tbox"></p>
+                <p>memo :<input type="text" name="memo" placeholder="memo" value="{{task.memo}}" class="tbox"></p>
+                <p>date :<input type="date" name="date" placeholder="date" value="{{date}}" required class="tbox"></p>
+                <p>time :<input type="time" name="time" placeholder="time" value="{{time}}" required class="tbox"></p>
+                <p>place :<input type="text" name="place" placeholder="place" value="{{task.place}}" class="tbox"></p>
             </div>
             <input type="hidden" name="taskid" value="{{task.taskid}}">
-            <button>更新</button>
+            <button class="button-l">更新</button>
         </form>
     </main>
 </body>

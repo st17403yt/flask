@@ -4,11 +4,12 @@
 <head>
     <meta charset="utf-8" />
     <title>login</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css')}}" />
 </head>
 
 <body>
-    <p>ログインしてください</p>
+    <p class="message-l">ログインしてください</p>
     <form name="f" method="post" action="/login">
-        <button type="submit" formmethod="POST">login</button>
+        <button type="submit" formmethod="POST" class="button-l">login</button>
     </form>
 </body>
