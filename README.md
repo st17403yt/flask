@@ -1,12 +1,16 @@
 # flask
 flask todo application
 
-googleでログインしてタスクの追加、編集、削除ができるだけ
+現在バグ発生中
+
+googleでログインするToDoリスト
 client_id, client_secretはGoogle Cloud Platformにて生成してください
+passwordにはgoogleアカウントのパスワードを入れてください
 
 ライブラリのインストール
 pip install Flask
 pip install Flask-SQLAlchemy
+pip install sqlalchemy
 pip install hashlib
 pip install PyJWT
 pip install cryptography

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import asc
 import os
 import urllib.request
 import urllib.parse
@@ -11,6 +12,11 @@ import jwt
 from jwt.algorithms import RSAAlgorithm
 import re
 import string
+import datetime
+from email import message
+import smtplib
+import time
+
 
 app = Flask(__name__)
 
@@ -76,6 +82,7 @@ def new():
     task.place = request.form["place"]
     db.session.add(task)
     db.session.commit()
+    task_update()
     return redirect(url_for('index'))
 
 
@@ -105,6 +112,7 @@ def update():
     task.date = date + "/" + time
     task.place = request.form["place"]
     db.session.commit()
+    task_update()
     return redirect(url_for('index'))
 
 
@@ -116,6 +124,7 @@ def delete():
     task = Task.query.filter_by(taskid=taskid).first()
     db.session.delete(task)
     db.session.commit()
+    task_update()
     return redirect(url_for('index'))
 
 
@@ -161,16 +170,50 @@ def escape(text):
     return result
 
 
+def task_update():
+    tasks = Task.query.order_by(asc(Task.date)).all()
+    users_tasks = db.session.query(Task).filter_by(
+        userid=session["userid"]).scalar() is None
+    f = True
+    print()
+    if users_tasks:
+        f = False
+    for task in tasks:
+        if task.userid == session["userid"]:
+            user = User.query.filter_by(userid=session["userid"]).first()
+            for i in top_task_list:
+                if i.user_id == session["userid"]:
+                    if f:
+                        i.task_name = task.title
+                        task_ts = task.date.split('/')
+                        i.task_time = datetime.datetime.fromisoformat(
+                            task_ts[0]+'-'+task_ts[1]+'-'+task_ts[2]+'T'+task_ts[3]+':'+task_ts[4]+':00')
+                        i.memo = task.memo
+                        i.destination = task.place
+                        i.task_id = task.taskid
+                        for i in top_task_list:
+                            print(i.task_name)
+                        return
+                    else:
+                        top_task_list.os.remove(i)
+                        print("heelo")
+                        return
+            t = top_task(user.email, task.title, task.date,
+                         task.memo, task.place, task.taskid, user.userid)
+            top_task_list.append(t)
+    print("h")
+    for i in top_task_list:
+        print(i)
+
+
 ###########################################
 # ここからユーザ認証
 ###########################################
-
-
 # クライアント情報
 # 自身の環境に合わせて設定する。
 # google cloud platform にて発行可能
-client_id = '<client_id>.apps.googleusercontent.com'
-client_secret = '<client_secret>'
+client_id = "<client_id>"
+client_secret = "<client_secret>"
 redirect_uri = 'http://localhost:5000/callback'
 
 # id_token 検証用公開鍵
@@ -263,7 +306,115 @@ def callback():
         db.session.commit()
     return redirect(url_for("index"))
 
+############################################################################################################
+
+
+class top_task:
+    def __init__(self, mail, task_name, task_time, memo, destination, task_id, user_id):
+        self.mail = mail
+        self.task_name = task_name
+        task_ts = task_time.split('/')
+        self.memo = memo
+        self.destination = destination
+        self.task_id = task_id
+        self.user_id = user_id
+
+        self.task_time = datetime.datetime.fromisoformat(
+            task_ts[0]+'-'+task_ts[1]+'-'+task_ts[2]+'T'+task_ts[3]+':'+task_ts[4]+':00')
+
+        if destination == None:
+            self.navi_url = "案内はありません"
+            self.destination = "目的地なし"
+        else:
+            self.navi_url = r"https://www.google.com/maps/dir//" + destination
+    self_flg = False
+
+
+top_task_list = [
+    #   top_task("nitic5ijikken@gmail.com", "ahgfb", "2021/07/01/14/45",
+    #           "akndneboiaenoiadf", None, 12, "userid"),
+    # top_task("nitic5ijikken@gmail.com", "qwerty", "2021/07/01/14/45",
+    #         "sdkfghosevseuvibvbareaer", "バーガーキングニューポートひたちなか店", 11, "userid")
+]
+
+
+def alarm_start(tl):
+    for i in tl:
+        if i.self_flg:
+            top_task_list.remove(i)
+            alarm_list.remove(i)
+            # delete_task(i.task_id)
+        else:
+            send_mail_reminder(i)
+
+
+def send_mail(task):
+
+    smtp_host = 'smtp.gmail.com'
+    smtp_port = 587
+    from_email = 'nitic5ijikken@gmail.com'
+    to_email = task.mail
+    username = 'nitic5ijikken@gmail.com'
+    password = "<password>"
+
+    msg = message.EmailMessage()
+    msg.set_content('件名:' + task.task_name + 'が' + str(task.task_time) +
+                    'に' + task.destination + 'で始まります\n\n\n目的地までの案内:' + task.navi_url)
+    msg['Subject'] = '時間のお知らせ'
+    msg['From'] = from_email
+    msg['To'] = to_email
+
+    server = smtplib.SMTP(smtp_host, smtp_port)
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+    server.login(username, password)
+    server.send_message(msg)
+    server.quit()
+
+
+def send_mail_reminder(task):
+
+    smtp_host = 'smtp.gmail.com'
+    smtp_port = 587
+    from_email = 'nitic5ijikken@gmail.com'
+    to_email = task.mail
+    username = 'nitic5ijikken@gmail.com'
+    password = "<password>"
+
+    msg = message.EmailMessage()
+    msg.set_content('リマインドメールです.\n\n件名:' + task.task_name + 'が' + str(task.task_time) +
+                    'に' + task.destination + 'で始まります.\n\n\n目的地までの案内:' + task.navi_url)
+    msg['Subject'] = 'ちゃんとやった？'
+    msg['From'] = from_email
+    msg['To'] = to_email
+
+    server = smtplib.SMTP(smtp_host, smtp_port)
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+    server.login(username, password)
+    server.send_message(msg)
+    server.quit()
+
+
+alarm_list = []
+
 
 if __name__ == "__main__":
     # サーバの設定 address:localhost port:5000
     app.run(debug=True, host=os.getenv('APP_ADDRESS', 'localhost'), port=5000)
+    # check()
+    print("start")
+    while True:
+        now = datetime.datetime.now()
+        for i in range(len(top_task_list)):
+            task = top_task_list[i]
+            if task not in alarm_list:
+                td = task.task_time - (now + datetime.timedelta(minutes=30))
+                if (td < datetime.timedelta(minutes=0)):
+                    alarm_list.append(top_task_list[i])
+                    send_mail(task)
+        alarm_start(alarm_list)
+        time.sleep(30)
+    print("finish")
