@@ -94,6 +94,9 @@ def edit():
     # 選択されたタスクの編集画面へ遷移
     session["taskid"] = request.form["taskid"]
     task = Task.query.filter_by(taskid=session["taskid"]).first()
+    if session["userid"] != task.userid:
+        # 別のユーザのタスクを編集しようとしている場合 error
+        return "error"
     temp = task.date.split("/")
     date = temp[0] + "-" + temp[1] + "-" + temp[2]
     time = temp[3] + ":" + temp[4]
@@ -104,7 +107,7 @@ def edit():
 @app.route('/update', methods=["POST"])
 def update():
     # 編集後のデータを設定してindexにリダイレクト
-    taskid = request.form["taskid"]
+    taskid = session["taskid"]
     task = Task.query.filter_by(taskid=taskid).first()
     task.title = request.form["title"]
     task.memo = request.form["memo"]
@@ -117,12 +120,15 @@ def update():
     return redirect(url_for('index'))
 
 
-# localhostにアクセスしたとき
+# 完了ボタンが押されたときの処理
 @app.route('/delete', methods=["POST"])
 def delete():
     # 選択されたタスクを削除してindexにリダイレクト
     taskid = request.form["taskid"]
     task = Task.query.filter_by(taskid=taskid).first()
+    if session["userid"] != task.userid:
+        # 別のユーザのタスクを削除しようとしている場合 error
+        return "error"
     db.session.delete(task)
     db.session.commit()
     task_update()
@@ -186,7 +192,7 @@ def task_update():
                     i.memo = task.memo
                     i.destination = task.place
                     i.task_id = task.taskid
-                    print_top_task("edit")
+                    # print_top_task("edit")
                     return
 
             # top_task_list の中に現在ログインしているユーザのタスクがない
@@ -195,7 +201,7 @@ def task_update():
             t = top_task(user.email, task.title, task.date,
                          task.memo, task.place, task.taskid, user.userid)
             top_task_list.append(t)
-            print_top_task("append")
+            # print_top_task("append")
             return
 
     # 登録されているタスクの中に現在ログインしているユーザのタスクがない
@@ -204,7 +210,7 @@ def task_update():
             # top_task_list の中に現在ログインしているユーザのタスクがある
             # -> top_task_list からの削除
             top_task_list.remove(i)
-            print_top_task("remove")
+            # print_top_task("remove")
             return
 
 
@@ -219,14 +225,12 @@ def print_top_task(text):
 # ここからユーザ認証
 ###########################################
 # クライアント情報
-# 自身の環境に合わせて設定する。
 client_id = "<client_id>"
 client_secret = "<client_secret>"
 redirect_uri = 'http://localhost:5000/callback'
 
 # id_token 検証用公開鍵
 # https://www.googleapis.com/oauth2/v3/certs
-# 下のやつを使ったら行けた
 jwk_json = {
     "e": "AQAB",
     "kty": "RSA",
@@ -300,6 +304,7 @@ def callback():
         return "invalid id_token"
 
     # claimsのsubは全てのGoogleアカウントで一意
+    # -> useridとして利用
     session["userid"] = claims["sub"]
     session["name"] = claims["name"]
 
@@ -341,12 +346,7 @@ class top_task:
     self_flg = False
 
 
-top_task_list = [
-    # top_task("nitic5ijikken@gmail.com", "ahgfb", "2021/07/01/14/45",
-    #           "akndneboiaenoiadf", None, 12, "userid"),
-    # top_task("nitic5ijikken@gmail.com", "qwerty", "2021/07/01/14/45",
-    #         "sdkfghosevseuvibvbareaer", "バーガーキングニューポートひたちなか店", 11, "userid")
-]
+top_task_list = []
 
 
 def alarm_start(tl):
@@ -363,9 +363,9 @@ def send_mail(task):
 
     smtp_host = 'smtp.gmail.com'
     smtp_port = 587
-    from_email = 'nitic5ijikken@gmail.com'
+    from_email = '<from mail address>'
     to_email = task.mail
-    username = 'nitic5ijikken@gmail.com'
+    username = '<google account name>'
     password = '<password>'
 
     msg = message.EmailMessage()
@@ -388,9 +388,9 @@ def send_mail_reminder(task):
 
     smtp_host = 'smtp.gmail.com'
     smtp_port = 587
-    from_email = 'nitic5ijikken@gmail.com'
+    from_email = '<from mail address>'
     to_email = task.mail
-    username = 'nitic5ijikken@gmail.com'
+    username = '<google account name>'
     password = '<password>'
 
     msg = message.EmailMessage()
@@ -415,20 +415,4 @@ alarm_list = []
 # 起動時の処理
 if __name__ == "__main__":
     # サーバの設定 address:localhost port:5000
-    app.run(debug=True, host=os.getenv('APP_ADDRESS', 'localhost'), port=5000)
-
-    # メール系の処理
-    # check()
-    print("start")
-    while True:
-        now = datetime.datetime.now()
-        for i in range(len(top_task_list)):
-            task = top_task_list[i]
-            if task not in alarm_list:
-                td = task.task_time - (now + datetime.timedelta(minutes=30))
-                if (td < datetime.timedelta(minutes=0)):
-                    alarm_list.append(top_task_list[i])
-                    send_mail(task)
-        alarm_start(alarm_list)
-        time.sleep(30)
-    print("finish")
+    app.run(host=os.getenv('APP_ADDRESS', 'localhost'), port=5000)

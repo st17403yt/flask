@@ -5,21 +5,43 @@
     <meta charset="utf-8" />
     <title>TODOアプリ</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css')}}" />
+    <script src="http://code.jquery.com/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 </head>
 
 <body>
+    <script>
+        $(function () {
+            $("#place_input").autocomplete({
+                source: function (req, res) {
+                    textbox = document.getElementById("place_input");
+                    text = textbox.value
+                    $.ajax({
+                        url: "/autocomplete",
+                        type: "POST",
+                        data: text,
+                        dataType: "json",
+                        success: function (msg) {
+                            res(msg);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
     <main>
         <div id="title" class="title">タスク</div>
         <form name="f" method="post" action="/update">
             <div class="text_area">
-                <p>title :<input type="text" name="title" placeholder="title" value="{{task.title}}" required
+                <p>Title :<input type="text" name="title" placeholder="title" value="{{task.title}}" required
                         class="tbox"></p>
-                <p>memo :<input type="text" name="memo" placeholder="memo" value="{{task.memo}}" class="tbox"></p>
-                <p>date :<input type="date" name="date" placeholder="date" value="{{date}}" required class="tbox"></p>
-                <p>time :<input type="time" name="time" placeholder="time" value="{{time}}" required class="tbox"></p>
-                <p>place :<input type="text" name="place" placeholder="place" value="{{task.place}}" class="tbox"></p>
+                <p>Memo :<input type="text" name="memo" placeholder="memo" value="{{task.memo}}" class="tbox"></p>
+                <p>Date :<input type="date" name="date" placeholder="date" value="{{date}}" required class="tbox"></p>
+                <p>Time :<input type="time" name="time" placeholder="time" value="{{time}}" required class="tbox"></p>
+                <p>Place :<input type="text" name="place" placeholder="place" value="{{task.place}}" id="place_input"
+                        class="tbox"></p>
             </div>
-            <input type="hidden" name="taskid" value="{{task.taskid}}">
             <button class="button-l">更新</button>
         </form>
     </main>
