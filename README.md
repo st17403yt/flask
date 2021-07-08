@@ -2,7 +2,7 @@
 
 googleでログインするToDoリスト  
 client_id, client_secretはGoogle Cloud Platformにて生成してください。  
-passwordにはgoogleアカウントのパスワードを入れてください。
+passwordにはgoogleアカウントのパスワードを入れてください。  
 Id Tokenの検証に利用しているGoogleの公開鍵を更新する機能は実装されていません。
 
 ライブラリのインストール
