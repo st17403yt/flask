@@ -15,7 +15,7 @@ import string
 import datetime
 from email import message
 import smtplib
-import time
+import threading
 
 
 app = Flask(__name__)
@@ -320,10 +320,9 @@ def callback():
     return redirect(url_for("index"))
 
 
-############################################################################################################
+###########################################
 # ここからメール送信系の処理
-############################################################################################################
-
+###########################################
 
 class top_task:
     def __init__(self, mail, task_name, task_time, memo, destination, task_id, user_id):
@@ -343,20 +342,10 @@ class top_task:
             self.destination = "目的地なし"
         else:
             self.navi_url = r"https://www.google.com/maps/dir//" + destination
-    self_flg = False
+    self_flg = True
 
 
 top_task_list = []
-
-
-def alarm_start(tl):
-    for i in tl:
-        if i.self_flg:
-            top_task_list.remove(i)
-            alarm_list.remove(i)
-            # delete_task(i.task_id)
-        else:
-            send_mail_reminder(i)
 
 
 def send_mail(task):
@@ -369,8 +358,9 @@ def send_mail(task):
     password = '<password>'
 
     msg = message.EmailMessage()
-    msg.set_content('件名:' + task.task_name + 'が' + str(task.task_time) +
-                    'に' + task.destination + 'で始まります\n\n\n目的地までの案内:' + task.navi_url)
+    msg.set_content('件名:' + task.task_name + 'が' + str(task.task_time) + 'に' +
+                    task.destination + 'で始まります\n目的地までの案内:' + task.navi_url +
+                    '\n通知をオフにする場合は以下のリンクを押し、削除を押して下さい。 http://localhost:5000')
     msg['Subject'] = '時間のお知らせ'
     msg['From'] = from_email
     msg['To'] = to_email
@@ -394,9 +384,10 @@ def send_mail_reminder(task):
     password = '<password>'
 
     msg = message.EmailMessage()
-    msg.set_content('リマインドメールです.\n\n件名:' + task.task_name + 'が' + str(task.task_time) +
-                    'に' + task.destination + 'で始まります.\n\n\n目的地までの案内:' + task.navi_url)
-    msg['Subject'] = 'ちゃんとやった？'
+    msg.set_content('リマインドメールです.\n件名:' + task.task_name + 'が' + str(task.task_time) + 'に' +
+                    task.destination + 'で始まります.\n目的地までの案内:' + task.navi_url +
+                    '\n通知をオフにする場合は以下のリンクを押し、削除を押して下さい。 http://localhost:5000')
+    msg['Subject'] = 'おぼえてますか？'
     msg['From'] = from_email
     msg['To'] = to_email
 
@@ -409,10 +400,28 @@ def send_mail_reminder(task):
     server.quit()
 
 
-alarm_list = []
+def check():
+    # print("loop")
+    now = datetime.datetime.now()
+    for task in top_task_list:
+        td = task.task_time - (now + datetime.timedelta(minutes=10))
+        if (td < datetime.timedelta(seconds=0)) and not task.self_flg:
+            send_mail_reminder(task)
+            # print("rem_send")
+        else:
+            td = task.task_time - (now + datetime.timedelta(minutes=30))
+            if (td < datetime.timedelta(seconds=0)) and task.self_flg:
+                send_mail(task)
+                # print("fst_send")
+                task.self_flg = False
+    t = threading.Timer(5, check)
+    t.start()
 
 
 # 起動時の処理
 if __name__ == "__main__":
+    # メール系の関数初回呼び出し
+    t = threading.Timer(5, check)
+    t.start()
     # サーバの設定 address:localhost port:5000
     app.run(host=os.getenv('APP_ADDRESS', 'localhost'), port=5000)
